@@ -79,7 +79,7 @@ def assign_detections_to_trackers(trackers, detections, iou_thrd = 0.3):
     
 
 
-def pipeline(img, prev_values, LTR, RTL):
+def pipeline(img, init_values, prev_values, LTR, RTL):
     '''
     Pipeline function for detection and tracking
     '''
@@ -170,7 +170,7 @@ def pipeline(img, prev_values, LTR, RTL):
 
     for trk in tracker_list:
         if ((trk.hits >= min_hits) and (trk.no_losses <= max_age)):
-
+             
              x_cv2 = trk.box
              if debug:
                  print('updated box: ', x_cv2)
@@ -179,16 +179,31 @@ def pipeline(img, prev_values, LTR, RTL):
             ##### Return image, x-position of the object, and the mid-pt of the image
              img, x_pos, midline = helpers.draw_box_label(trk.id, img, x_cv2, LTR, RTL) # Draw the bounding boxes on the image
 
-             if len(prev_values) != 0:
+             ##### Registering crossing the midline
+             if len(prev_values) != 0 and len(init_values) != 0:
                  if trk.id in prev_values.keys():
                     if prev_values[trk.id] <= midline and x_pos > midline:
                         LTR += 1
                     if prev_values[trk.id] > midline and x_pos <= midline:
                         RTL += 1
-
+             ##### Accounting for crossing line and going back
+                 if trk.id in init_values.keys():
+                     if init_values[trk.id] <= midline and (prev_values[trk.id] > midline and x_pos <= midline):
+                         LTR -= 1
+                         RTL -= 1
+                     if init_values[trk.id] > midline and (prev_values[trk.id] <= midline and x_pos > midline):
+                         LTR -= 1
+                         RTL -= 1
+                         
+            ##### Append initial location of identified subject
+             if trk.id not in init_values.keys():             
+                 init_values[trk.id] = x_pos
+                         
             ##### dict for tracking previous values
              prev_values[trk.id] = x_pos
-             print(f"dict: {prev_values}")
+
+             print(f"initial values: {init_values}")
+             print(f"previous values: {prev_values}")
 
              good_tracker_list.append(trk)
                  
@@ -237,6 +252,7 @@ if __name__ == "__main__":
         out = cv2.VideoWriter('output.avi', fourcc, 8.0, (640,480))
 
         ##### initial conditions
+        init_values = {} ##### dict for initial position of the identified objects
         prev_values = {} ##### dict for x_pos of previous frames
         prev_LTR = 0
         prev_RTL = 0
@@ -246,7 +262,7 @@ if __name__ == "__main__":
             #print(img)
             
             np.asarray(img)
-            new_img, LTR, RTL = pipeline(img, prev_values, prev_LTR, prev_RTL)
+            new_img, LTR, RTL = pipeline(img, init_values, prev_values, prev_LTR, prev_RTL)
 
             prev_LTR = LTR
             prev_RTL = RTL
