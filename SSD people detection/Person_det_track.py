@@ -18,14 +18,15 @@ import cv2
 # Global variables to be used by funcitons of VideoFileClop
 frame_count = 0 # frame counter
 
-max_age = 15  # no.of consecutive unmatched detection before 
+max_age = 5  # no.of consecutive unmatched detection before 
              # a track is deleted
 
-min_hits =1  # no. of consecutive matches needed to establish a track
+min_hits = 1  # no. of consecutive matches needed to establish a track
 
 tracker_list =[] # list for trackers
 # list for track ID
-track_id_list= deque(['1', '2', '3', '4', '5', '6', '7', '7', '8', '9', '10'])
+# track_id_list= deque(['1', '2', '3', '4', '5', '6', '7', '7', '8', '9', '10'])
+track_id_list= deque(range(1,100)) ##### addition of numbers of max people detected
 
 debug = False
 

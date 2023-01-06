@@ -117,7 +117,8 @@ class PersonDetector(object):
               cls = classes.tolist()
               
               # The ID for car is 3 
-              idx_vec = [i for i, v in enumerate(cls) if ((v==1) and (scores[i]>0.3))]
+              score_thresh = 0.4 ##### adjustuing the confidence of the detection threshold
+              idx_vec = [i for i, v in enumerate(cls) if ((v==1) and (scores[i]>score_thresh))]
               
               if len(idx_vec) ==0:
                   print('no detection!')
